@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "HerhalingMicrosoftExtensions": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "HerhalingMicrosoftExtensions__Name": "ENV"
+      }
+    }
+  }
+}

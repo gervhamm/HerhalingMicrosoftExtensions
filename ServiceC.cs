@@ -1,11 +1,18 @@
-﻿class ServiceC
+﻿using Microsoft.Extensions.Logging;
+
+namespace HerhalingMicrosoftExtensions;
+
+class ServiceC
 {
-    public ServiceC()
+    private readonly ILogger<ServiceC> _logger;
+    public ServiceC(ILogger<ServiceC> logger)
     {
-        Console.WriteLine("Service C Created");
+        _logger = logger;
     }
     public void Print(string message)
     {
-        Console.WriteLine("Service C: " + message);
+        _logger.LogTrace("Service C Trace: {message}", message);
+        _logger.LogDebug("Service C Debug: {message}", message);
+        _logger.LogWarning("Service C Warning: {message}", message);
     }
 }

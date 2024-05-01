@@ -1,11 +1,17 @@
-﻿class ServiceA
+﻿using Microsoft.Extensions.Logging;
+
+namespace HerhalingMicrosoftExtensions;
+class ServiceA
 {
-    public ServiceA()
+    private readonly ILogger<ServiceA> _logger;
+    public ServiceA(ILogger<ServiceA> logger)
     {
-        Console.WriteLine("Service A Created");
+        _logger = logger;
     }
     public void Print(string message)
     {
-        Console.WriteLine("Service A: " + message);
+        _logger.LogTrace("Service A Trace: {message}", message);
+        _logger.LogDebug("Service A Debug: {message}", message);
+        _logger.LogWarning("Service A Warning: {message}", message);
     }
 }

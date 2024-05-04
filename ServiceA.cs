@@ -1,13 +1,17 @@
 ﻿using Microsoft.Extensions.Logging;
 
 namespace HerhalingMicrosoftExtensions;
-class ServiceA
+class ServiceA : IService
 {
-    private readonly ILogger<ServiceA> _logger;
-    public ServiceA(ILogger<ServiceA> logger)
+    private readonly ILogger _logger;
+    
+    public ServiceA(ILoggerFactory loggerFactory)
     {
-        _logger = logger;
+        _logger = loggerFactory.CreateLogger("ServiceA");
+        _logger.LogDebug("Service A Created");
+
     }
+
     public void Print(string message)
     {
         _logger.LogTrace("Service A Trace: {message}", message);

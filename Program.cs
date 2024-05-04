@@ -3,7 +3,9 @@ using HerhalingMicrosoftExtensions.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using static System.Formats.Asn1.AsnWriter;
 
+#region Configuration
 var builder = new ConfigurationBuilder()
     .AddInMemoryCollection(new Dictionary<string, string?>
     {
@@ -15,9 +17,9 @@ var builder = new ConfigurationBuilder()
     .AddEnvironmentVariables();
 
 var configuration = builder.Build();
-
+/*
 var logLevel = configuration["Logging:LogLevel:HerhalingMicrosoftExtensions"];
-Console.WriteLine($"LogLevel: {logLevel}");
+Console.WriteLine($"LogLevel: {logLevel}");*/
 
 var herhalingMicrosoftExtensions = new HerhalingMicrosoftExtensionsConfiguration();
 configuration.Bind("HerhalingMicrosoftExtensions", herhalingMicrosoftExtensions);
@@ -26,16 +28,20 @@ var section = configuration.GetSection("HerhalingMicrosoftExtensions");
 
 var name = section["Name"];
 var connectionString = configuration["HerhalingMicrosoftExtensions:ConnectionString"];
+#endregion
 
 #region Logging
 
-/*var factory = LoggerFactory.Create(builder =>
+var factory = LoggerFactory.Create(builder =>
 {
     //builder.SetMinimumLevel(LogLevel.Trace);
-    builder.AddConsole();
-    builder.AddFilter("HerhalingMicrosoftExtensions.ServiceA", LogLevel.Trace);
-    builder.AddFilter("HerhalingMicrosoftExtensions.ServiceB", LogLevel.Debug);
-    builder.AddFilter("HerhalingMicrosoftExtensions.ServiceC", LogLevel.Debug);
+    builder
+        .AddFilter("ServiceA", LogLevel.Trace)
+        .AddFilter("ServiceB", LogLevel.Debug)
+        .AddFilter("ServiceC", LogLevel.Debug)
+        .AddFilter("Microsoft", LogLevel.Warning)
+        .AddFilter("System", LogLevel.Warning)
+        .AddConsole();
 });
 
 var logger = factory.CreateLogger("Default");
@@ -47,26 +53,40 @@ logger.LogError("Log Error");
 logger.LogCritical("Log Critical");
 
 logger.LogWarning("Configuration Name: {name}", herhalingMicrosoftExtensions.Name);
-logger.LogWarning("Configuration ConnectionString: {connectionString}", herhalingMicrosoftExtensions.ConnectionString);*/
+logger.LogWarning("Configuration ConnectionString: {connectionString}", herhalingMicrosoftExtensions.ConnectionString);
 
 #endregion
 
+#region Services
 var services = new ServiceCollection();
-// Manually register serviceB with serviceA (not necessary in this case, when using interfaces)
-services.AddScoped(provider =>
-{
-    var service = provider.GetRequiredService<ServiceA>();
-    var logger = provider.GetRequiredService<ILogger<ServiceB>>();
-    return new ServiceB(service, logger);
-});
-services.AddSingleton<ServiceA>();
-services.AddTransient<ServiceC>();
-services.AddLogging(builder =>
-{
-    builder.AddConsole();
-});
+//Logging service
+services.AddSingleton(factory);
 
+//Service A
+services.AddSingleton<IService, ServiceA>();
+//Service B
+services.AddScoped<ServiceB>();
+//Service C
+services.AddTransient<ServiceC>();
+
+//provider
 var provider = services.BuildServiceProvider(validateScopes: true);
+//Add services to provider
+var serviceA1 = provider.GetRequiredService<IService>();
+var serviceA2 = provider.GetRequiredService<IService>();
+
+var serviceC1 = provider.GetRequiredService<ServiceC>();
+var serviceC2 = provider.GetRequiredService<ServiceC>();
+var serviceC3 = provider.GetRequiredService<ServiceC>();
+
+//Test services
+serviceA1.Print("Hello from Service A1");
+serviceA2.Print("Hello from Service A2");
+
+serviceC1.Print("Hello from Service C1");
+serviceC2.Print("Hello from Service C2");
+serviceC3.Print("Hello from Service C3");
+
 
 using (var scope1 = provider.CreateScope())
 {
@@ -77,22 +97,10 @@ using (var scope1 = provider.CreateScope())
 using var scope2 = provider.CreateScope();
 var serviceB2 = scope2.ServiceProvider.GetRequiredService<ServiceB>();
 
-var serviceA1 = provider.GetRequiredService<ServiceA>();
-var serviceA2 = provider.GetRequiredService<ServiceA>();
-
-var serviceC1 = provider.GetRequiredService<ServiceC>();
-var serviceC2 = provider.GetRequiredService<ServiceC>();
-var serviceC3 = provider.GetRequiredService<ServiceC>();
-
 serviceB2.Print("Hello from Service B2");
 
-serviceA1.Print("Hello from Service A1");
-serviceA2.Print("Hello from Service A2");
 
-serviceC1.Print("Hello from Service C1");
-serviceC2.Print("Hello from Service C2");
-serviceC3.Print("Hello from Service C3");
-
+#endregion
 
 
 

@@ -3,19 +3,17 @@
 namespace HerhalingMicrosoftExtensions;
 class ServiceB
 {
-    private readonly ServiceA _service;
+    private readonly IService _service;
 
-    private readonly ILogger<ServiceB> _logger;
-    public ServiceB(ServiceA service, ILogger<ServiceB> logger)
+    private readonly ILogger _logger;
+    public ServiceB(IService service, ILoggerFactory loggerFactory)
     {
-        _logger = logger;
+        _logger = loggerFactory.CreateLogger("ServiceB");
         _logger.LogDebug("Service B Created");
         _service = service;
     }
     public void Print(string message)
     {
-        _logger.LogTrace("Service B Trace: {message}", message);
-        _logger.LogDebug("Service B Debug: {message}", message);
-        _logger.LogWarning("Service B Warning: {message}", message);
+        _service.Print(message);
     }
 }
